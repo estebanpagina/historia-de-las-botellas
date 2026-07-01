@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENA — Ciclo de Vida Botella PET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* =============================================================
+   CSS LAYER 1 — Design Tokens & Custom Properties
+   ============================================================= */
+:root{
+  --sena-blue:#00324D; --sena-green:#39A900; --sena-orange:#FF6B2B;
+  --ext:#F59E0B; --prod:#EF4444; --dist:#06B6D4; --cons:#84CC16; --des:#10B981;
+  --bg:#0D1117; --card:#161B22; --card2:#1C2128; --border:#21262D; --text:#E6EDF3; --muted:#7D8590;
+  --font-head:'Bebas Neue',cursive; --font-body:'DM Sans',sans-serif; --font-mono:'Space Mono',monospace;
+  --glow-green:rgba(57,169,0,.4); --glow-red:rgba(239,68,68,.35); --glow-cyan:rgba(6,182,212,.3);
+  --radius:12px; --shadow:0 20px 60px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body)}
+
+/* =============================================================
+   CSS LAYER 2 — Layout Shell
+   ============================================================= */
+.app{display:flex;height:100vh;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:272px;min-width:272px;background:var(--sena-blue);
+  border-right:1px solid rgba(57,169,0,.2);
+  display:flex;flex-direction:column;padding:18px 14px;z-index:20;
+  box-shadow:4px 0 40px rgba(0,0,0,.5);position:relative;
+}
+.brand-box{text-align:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.brand-box img{width:52px;filter:brightness(0) invert(1);margin-bottom:8px}
+.brand-title{font-family:var(--font-head);font-size:1.35rem;letter-spacing:2px;color:#fff}
+.brand-title em{color:var(--sena-green);font-style:normal}
+.brand-sub{font-size:.7rem;color:rgba(255,255,255,.45);letter-spacing:.5px;margin-top:2px}
+
+.nav-steps{list-style:none;display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto}
+.nav-steps::-webkit-scrollbar{width:3px}
+.nav-steps::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.step-link{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:7px;
+  color:rgba(255,255,255,.5);cursor:pointer;font-size:.78rem;font-weight:600;
+  transition:all .2s ease;border:1px solid transparent;letter-spacing:.2px;
+}
+.step-link:hover{background:rgba(255,255,255,.07);color:#fff;border-color:rgba(255,255,255,.1)}
+.step-link.active{background:rgba(255,255,255,.11);color:#fff;border-color:rgba(255,255,255,.18)}
+.step-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .2s}
+.step-link.active .step-dot{background:var(--sena-green);box-shadow:0 0 8px var(--sena-green)}
+.step-link.s0.active .step-dot{background:var(--sena-orange);box-shadow:0 0 8px var(--sena-orange)}
+.step-link.s1.active .step-dot{background:#a855f7;box-shadow:0 0 8px #a855f7}
+.step-link.s2.active .step-dot{background:#e11d48;box-shadow:0 0 8px #e11d48}
+.step-link.s3.active .step-dot{background:var(--ext);box-shadow:0 0 8px var(--ext)}
+.step-link.s4.active .step-dot{background:var(--prod);box-shadow:0 0 8px var(--prod)}
+.step-link.s5.active .step-dot{background:var(--dist);box-shadow:0 0 8px var(--dist)}
+.step-link.s6.active .step-dot{background:var(--cons);box-shadow:0 0 8px var(--cons)}
+.step-link.s7.active .step-dot{background:var(--des);box-shadow:0 0 8px var(--des)}
+.step-link.s8.active .step-dot{background:var(--prod);box-shadow:0 0 8px var(--prod)}
+.step-link.s9.active .step-dot{background:var(--sena-green);box-shadow:0 0 8px var(--sena-green)}
+.step-link.s10.active .step-dot{background:var(--dist);box-shadow:0 0 8px var(--dist)}
+.sidebar-footer{font-size:.7rem;color:rgba(255,255,255,.28);text-align:center;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
+.sidebar-footer strong{color:rgba(255,255,255,.45)}
+
+/* ── Progress Bar ── */
+.progress-bar{height:3px;background:var(--border);position:relative;z-index:10;flex-shrink:0}
+.progress-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--sena-orange),var(--ext),var(--prod),var(--dist),var(--cons),var(--des),var(--sena-green));
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Slides ── */
+.slides-wrap{flex:1;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;opacity:0;visibility:hidden;
+  transform:translateX(40px);
+  transition:opacity .35s ease,transform .35s ease,visibility .35s;
+  overflow-y:auto;padding:28px 36px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.slide.active{opacity:1;visibility:visible;transform:translateX(0)}
+/* Custom scrollbar */
+.slide::-webkit-scrollbar{width:5px}
+.slide::-webkit-scrollbar-track{background:transparent}
+.slide::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.slide::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ── Controls ── */
+.controls{
+  height:60px;background:var(--card);border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 36px;flex-shrink:0;z-index:10;
+}
+.ctrl-btn{
+  background:var(--border);color:var(--text);border:1px solid var(--border);
+  padding:9px 20px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;
+  display:flex;align-items:center;gap:8px;transition:all .2s;font-family:var(--font-body);
+}
+.ctrl-btn:hover:not(:disabled){background:var(--sena-green);border-color:var(--sena-green);color:#000}
+.ctrl-btn:disabled{opacity:.3;cursor:not-allowed}
+.slide-indicator{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+
+/* =============================================================
+   CSS LAYER 3 — Shared Components
+   ============================================================= */
+.slide-tag{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;
+  font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;margin-bottom:8px;
+}
+.slide-title{font-family:var(--font-head);font-size:2.6rem;letter-spacing:1px;line-height:1;color:#fff}
+.slide-sub{font-size:.85rem;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* Hero Banner */
+.hero-banner{width:100%;height:150px;border-radius:var(--radius);overflow:hidden;position:relative;flex-shrink:0;}
+.hero-banner img{width:100%;height:100%;object-fit:cover;transition:transform 6s ease}
+.hero-banner:hover img{transform:scale(1.05)}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,.8) 0%,rgba(0,0,0,.2) 60%,transparent 100%);
+  display:flex;flex-direction:column;justify-content:center;padding:22px;
+}
+.hero-overlay .slide-title{font-size:1.9rem}
+
+/* Stat Bar */
+.stat-bar{display:flex;gap:10px;flex-shrink:0}
+.stat-pill{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;text-align:center;position:relative;overflow:hidden;
+  transition:transform .2s, border-color .2s;
+}
+.stat-pill:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.12)}
+.stat-pill::before{content:'';position:absolute;inset:0;opacity:.07;background:linear-gradient(135deg,currentColor 0%,transparent 100%)}
+.stat-num{font-family:var(--font-head);font-size:1.9rem;letter-spacing:1px;display:block}
+.stat-label{font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase;display:block;margin-top:2px}
+
+/* Q&A Grid Cards */
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.qa-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:16px;transition:all .25s ease;position:relative;overflow:hidden;
+}
+.qa-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.14);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.qa-card.wide{grid-column:span 2}
+.qa-card-icon{font-size:1.5rem;margin-bottom:9px;display:block}
+.qa-card-q{font-weight:700;font-size:.87rem;color:#fff;margin-bottom:7px}
+.qa-card-a{font-size:.82rem;color:var(--muted);line-height:1.65}
+.qa-card-a strong{color:var(--text)}
+.qa-card-stripe{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px}
+
+/* =============================================================
+   CSS LAYER 4 — Cover Slide
+   ============================================================= */
+.slide-cover{
+  align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(ellipse at 30% 50%,rgba(57,169,0,.09) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 20%,rgba(255,107,43,.07) 0%,transparent 50%),var(--bg);
+  overflow:hidden;
+}
+#cover-canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+.cover-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
+.cover-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(57,169,0,.15);border:1px solid rgba(57,169,0,.4);
+  color:var(--sena-green);padding:6px 16px;border-radius:30px;
+  font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px;
+}
+.cover-h1{font-family:var(--font-head);font-size:4.2rem;letter-spacing:2px;line-height:.95;color:#fff;margin-bottom:14px}
+.cover-h1 em{color:var(--sena-green);font-style:normal}
+.cover-program{font-size:.87rem;color:var(--muted);margin-bottom:22px;font-weight:500}
+.cover-program strong{color:var(--text)}
+.cover-team{
+  display:inline-flex;gap:28px;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 26px;margin-bottom:24px;
+}
+.member p{font-size:.66rem;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.member h3{font-size:.95rem;color:#fff;font-weight:600;margin-top:2px}
+.start-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--sena-green);color:#000;border:none;
+  padding:13px 30px;border-radius:8px;font-size:.92rem;font-weight:700;
+  cursor:pointer;transition:all .3s;font-family:var(--font-body);letter-spacing:.3px;
+}
+.start-btn:hover{background:#2e8500;transform:translateY(-2px);box-shadow:0 8px 24px var(--glow-green)}
+.bottle-anim{position:absolute;right:8%;top:50%;transform:translateY(-50%);opacity:.11;pointer-events:none;z-index:1}
+.bottle-anim svg{width:180px;animation:bottleFloat 4s ease-in-out infinite}
+@keyframes bottleFloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-18px) rotate(5deg)}}
+@keyframes pulse{0%,100%{opacity:.7}50%{opacity:1}}
+.cover-pulse{animation:pulse 2s ease-in-out infinite}
+
+/* =============================================================
+   CSS LAYER 5 — Journey Map
+   ============================================================= */
+.map-slide{background:var(--bg)}
+.journey-map{display:flex;flex-direction:column;gap:20px;margin-top:4px}
+.phases-row{display:flex;gap:0;align-items:stretch;position:relative}
+.phase-card{
+  flex:1;position:relative;border-radius:0;cursor:pointer;overflow:hidden;
+  min-height:240px;transition:flex .4s cubic-bezier(.4,0,.2,1);
+}
+.phase-card:first-child{border-radius:14px 0 0 14px}
+.phase-card:last-child{border-radius:0 14px 14px 0}
+.phase-card:hover{flex:2}
+.phase-card:hover .phase-content{opacity:1;transform:translateY(0)}
+.phase-card:hover .phase-num{font-size:2.8rem;opacity:.12}
+.phase-img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform .6s ease;filter:saturate(.6) brightness(.42);
+}
+.phase-card:hover .phase-img{transform:scale(1.08);filter:saturate(.9) brightness(.32)}
+.phase-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.3) 60%,transparent 100%);z-index:1;
+}
+.phase-card-inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:18px 14px}
+.phase-num{font-family:var(--font-head);font-size:4.5rem;letter-spacing:-2px;line-height:1;color:rgba(255,255,255,.22);margin-bottom:auto;padding-top:10px;transition:all .3s}
+.phase-icon-wrap{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:9px;border:2px solid rgba(255,255,255,.3);flex-shrink:0}
+.phase-label{font-family:var(--font-head);font-size:1.1rem;letter-spacing:1px;color:#fff;margin-bottom:3px}
+.phase-desc{font-size:.72rem;color:rgba(255,255,255,.52);line-height:1.4}
+.phase-content{margin-top:9px;opacity:0;transform:translateY(8px);transition:all .35s ease}
+.phase-stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);border-radius:6px;padding:7px 11px;font-size:.76rem;color:#fff;font-weight:600;line-height:1.4;display:flex;align-items:center;gap:8px}
+.phase-connector{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;z-index:5;position:relative}
+.flow-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 4px}
+.flow-arrow span{display:block;width:2px;height:8px;background:rgba(255,255,255,.15);border-radius:1px;animation:flowDot 1.5s ease-in-out infinite}
+.flow-arrow span:nth-child(2){animation-delay:.2s}
+.flow-arrow span:nth-child(3){animation-delay:.4s}
+@keyframes flowDot{0%,100%{opacity:.15;transform:scaleY(.6)}50%{opacity:.7;transform:scaleY(1.2)}}
+.phase-ext .phase-icon-wrap{background:rgba(245,158,11,.25);border-color:var(--ext);color:var(--ext)}
+.phase-ext .phase-overlay{background:linear-gradient(to top,rgba(245,158,11,.3) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+.phase-prod .phase-icon-wrap{background:rgba(239,68,68,.25);border-color:var(--prod);color:var(--prod)}
+.phase-prod .phase-overlay{background:linear-gradient(to top,rgba(239,68,68,.3) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+.phase-dist .phase-icon-wrap{background:rgba(6,182,212,.25);border-color:var(--dist);color:var(--dist)}
+.phase-dist .phase-overlay{background:linear-gradient(to top,rgba(6,182,212,.3) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+.phase-cons .phase-icon-wrap{background:rgba(132,204,22,.25);border-color:var(--cons);color:var(--cons)}
+.phase-cons .phase-overlay{background:linear-gradient(to top,rgba(132,204,22,.3) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+.phase-des .phase-icon-wrap{background:rgba(16,185,129,.25);border-color:var(--des);color:var(--des)}
+.phase-des .phase-overlay{background:linear-gradient(to top,rgba(16,185,129,.3) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+.paradox-box{
+  background:linear-gradient(135deg,rgba(239,68,68,.09),rgba(245,158,11,.06));
+  border:1px solid rgba(239,68,68,.28);border-radius:10px;padding:14px 18px;
+  display:flex;align-items:center;gap:16px;
+}
+.paradox-box .big-num{font-family:var(--font-head);font-size:3rem;line-height:1;flex-shrink:0}
+.paradox-box p{font-size:.88rem;color:var(--text);line-height:1.5}
+.paradox-box p em{color:var(--sena-orange);font-style:normal;font-weight:700}
+
+/* =============================================================
+   CSS LAYER 6 — Video Slide
+   ============================================================= */
+.video-wrapper{
+  position:relative;border-radius:14px;overflow:hidden;background:#000;
+  border:2px solid rgba(225,29,72,.35);
+  box-shadow:0 0 50px rgba(225,29,72,.12),var(--shadow);
+  flex-shrink:0;
+}
+.video-wrapper video{width:100%;max-height:380px;object-fit:contain;display:block;background:#000}
+.video-glow{
+  position:absolute;inset:-1px;border-radius:15px;pointer-events:none;
+  background:transparent;
+  box-shadow:inset 0 0 30px rgba(225,29,72,.08);
+}
+.video-info-bar{
+  display:flex;align-items:center;gap:14px;background:rgba(225,29,72,.08);
+  border:1px solid rgba(225,29,72,.2);border-radius:10px;padding:12px 16px;
+  flex-shrink:0;
+}
+.video-info-bar .vi-icon{font-size:1.8rem;flex-shrink:0}
+.video-info-bar h4{font-size:.92rem;color:#fff;font-weight:700;margin-bottom:3px}
+.video-info-bar p{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
+.video-context-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex-shrink:0}
+.vc-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px;display:flex;gap:10px;align-items:flex-start;
+  transition:border-color .2s;
+}
+.vc-card:hover{border-color:rgba(255,255,255,.12)}
+.vc-card .vc-icon{font-size:1.4rem;flex-shrink:0;margin-top:1px}
+.vc-card strong{color:#fff;font-size:.82rem;display:block;margin-bottom:4px}
+.vc-card p{font-size:.77rem;color:var(--muted);line-height:1.5;margin:0}
+
+/* =============================================================
+   CSS LAYER 7 — Donut SVG Chart (Desecho Slide)
+   ============================================================= */
+.desecho-layout{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
+.donut-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.donut-wrap h4{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;text-align:center}
+.donut-svg{width:180px;height:180px}
+.donut-legend{display:flex;flex-direction:column;gap:7px;width:100%}
+.dl-row{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+.dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dl-row span{margin-left:auto;font-weight:700;color:var(--text);font-family:var(--font-mono);font-size:.74rem}
+
+/* =============================================================
+   CSS LAYER 8 — Conclusions: Impacts (Slide 8)
+   ============================================================= */
+.reflection-intro{
+  background:linear-gradient(135deg,rgba(239,68,68,.07),rgba(245,158,11,.04));
+  border-left:3px solid var(--prod);border-radius:0 10px 10px 0;
+  padding:14px 18px 14px 24px;position:relative;flex-shrink:0;
+}
+.q-mark{
+  font-family:var(--font-head);font-size:4rem;line-height:0;color:var(--prod);opacity:.25;
+  position:absolute;top:22px;left:8px;
+}
+.reflection-intro p{font-size:.87rem;color:var(--text);line-height:1.65;padding-left:18px;font-style:italic}
+.impact-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.impact-col{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.impact-col-header{display:flex;align-items:center;gap:10px;margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid var(--border)}
+.impact-col-header i{font-size:1.2rem}
+.impact-col.environmental .impact-col-header i{color:var(--prod)}
+.impact-col.social .impact-col-header i{color:var(--dist)}
+.impact-col-header h3{font-size:.93rem;color:#fff;font-weight:700;margin:0}
+.impact-items{display:flex;flex-direction:column;gap:11px}
+.impact-item{display:flex;gap:9px;align-items:flex-start}
+.impact-bullet{width:5px;height:5px;border-radius:50%;margin-top:8px;flex-shrink:0}
+.impact-item p{font-size:.8rem;color:var(--muted);line-height:1.6;margin:0}
+.impact-item p strong{color:var(--text)}
+/* Impact stats row */
+.impact-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex-shrink:0}
+.ist{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;position:relative;overflow:hidden}
+.ist::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.ist.c1::after{background:var(--prod)} .ist.c2::after{background:var(--ext)} .ist.c3::after{background:var(--dist)} .ist.c4::after{background:var(--des)}
+.ist-num{font-family:var(--font-head);font-size:1.7rem;letter-spacing:1px;display:block}
+.ist-label{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;display:block;margin-top:2px}
+
+/* =============================================================
+   CSS LAYER 9 — Proposals Slide (Slide 9)
+   ============================================================= */
+.proposals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.proposal-cat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:12px}
+.pcat-header{display:flex;align-items:center;gap:9px;padding-bottom:11px;border-bottom:2px solid}
+.pcat-header i{font-size:1.1rem}
+.pcat-header h3{font-size:.9rem;font-weight:700;margin:0}
+.proposal-item{padding:10px 12px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid}
+.priority-badge{display:inline-block;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:20px;margin-bottom:6px}
+.pb-urgent{background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.28)}
+.pb-medium{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.28)}
+.pb-long{background:rgba(57,169,0,.18);color:var(--sena-green);border:1px solid rgba(57,169,0,.28)}
+.proposal-item p{font-size:.78rem;color:var(--muted);line-height:1.55;margin:0}
+.proposal-item p strong{color:var(--text)}
+.closing-thought{
+  background:linear-gradient(135deg,rgba(57,169,0,.09),rgba(16,185,129,.05));
+  border:1px solid rgba(57,169,0,.28);border-radius:var(--radius);
+  padding:14px 18px;display:flex;align-items:center;gap:16px;flex-shrink:0;
+}
+.closing-thought i{font-size:1.8rem;flex-shrink:0}
+.closing-thought p{font-size:.87rem;color:var(--text);line-height:1.5;margin:0}
+.closing-thought p strong{color:var(--sena-green)}
+
+/* =============================================================
+   CSS LAYER 10 — TIC Slide (Slide 10)
+   ============================================================= */
+.matrix-wrap{overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)}
+.matrix-table{width:100%;border-collapse:collapse;background:var(--card)}
+.matrix-table th{background:var(--sena-blue);color:#fff;padding:12px 16px;font-size:.8rem;font-weight:700;text-align:left;letter-spacing:.5px;text-transform:uppercase}
+.matrix-table td{padding:12px 16px;font-size:.82rem;line-height:1.55;color:var(--muted);border-top:1px solid var(--border);vertical-align:top}
+.matrix-table td:first-child{font-weight:700;color:var(--text);white-space:nowrap}
+.matrix-table tr:hover td{background:rgba(255,255,255,.02)}
+.tic-box{background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(57,169,0,.05));border:1px solid rgba(6,182,212,.22);border-radius:var(--radius);padding:18px}
+.tic-box h4{color:#fff;font-size:.92rem;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.tic-item{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.tic-item:last-child{border-bottom:none;padding-bottom:0}
+.tic-badge{flex-shrink:0;width:30px;height:30px;border-radius:6px;background:rgba(6,182,212,.18);border:1px solid rgba(6,182,212,.35);display:flex;align-items:center;justify-content:center;font-size:.88rem}
+.tic-text strong{color:var(--dist);display:block;font-size:.8rem;margin-bottom:2px}
+.tic-text span{font-size:.77rem;color:var(--muted);line-height:1.5}
+
+/* =============================================================
+   CSS LAYER 11 — Animations & Utility
+   ============================================================= */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.slide.active > *{animation:fadeSlideUp .4s ease forwards}
+.slide.active > *:nth-child(1){animation-delay:.05s}
+.slide.active > *:nth-child(2){animation-delay:.12s}
+.slide.active > *:nth-child(3){animation-delay:.18s}
+.slide.active > *:nth-child(4){animation-delay:.24s}
+.slide.active > *:nth-child(5){animation-delay:.30s}
+img.phase-img{background:#1a1a2e}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ==================== SIDEBAR ==================== -->
+<nav class="sidebar">
+  <div class="brand-box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA">
+    <div class="brand-title">Gestión <em>TIC</em></div>
+    <div class="brand-sub">INFRAESTRUCTURA DE LAS TIC</div>
+  </div>
+  <ul class="nav-steps">
+    <li class="step-link s0 active" onclick="goTo(0)"><span class="step-dot"></span> Portada del Proyecto</li>
+    <li class="step-link s1" onclick="goTo(1)"><span class="step-dot"></span> Mapa del Recorrido</li>
+    <li class="step-link s2" onclick="goTo(2)"><span class="step-dot"></span> 🎬 Video: Tres Botellas</li>
+    <li class="step-link s3" onclick="goTo(3)"><span class="step-dot"></span> 1 · Extracción Fósil</li>
+    <li class="step-link s4" onclick="goTo(4)"><span class="step-dot"></span> 2 · Producción Química</li>
+    <li class="step-link s5" onclick="goTo(5)"><span class="step-dot"></span> 3 · Distribución Global</li>
+    <li class="step-link s6" onclick="goTo(6)"><span class="step-dot"></span> 4 · Consumo Masivo</li>
+    <li class="step-link s7" onclick="goTo(7)"><span class="step-dot"></span> 5 · Disposición Final</li>
+    <li class="step-link s8" onclick="goTo(8)"><span class="step-dot"></span> ✦ Conclusiones: Impactos</li>
+    <li class="step-link s9" onclick="goTo(9)"><span class="step-dot"></span> ✦ Propuestas de Acción</li>
+    <li class="step-link s10" onclick="goTo(10)"><span class="step-dot"></span> ⚙ Soluciones TIC</li>
+  </ul>
+  <div class="sidebar-footer">SENA — CEET<br><strong>Protección Ambiental</strong></div>
+</nav>
+
+<!-- ==================== MAIN ==================== -->
+<div class="main">
+  <div class="progress-bar"><div class="progress-fill" id="bar"></div></div>
+
+  <div class="slides-wrap">
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 0 — PORTADA
+       ══════════════════════════════════════════════ -->
+  <section class="slide slide-cover active">
+    <!-- Canvas particle animation (painted by JS) -->
+    <canvas id="cover-canvas"></canvas>
+
+    <div class="bottle-anim">
+      <svg viewBox="0 0 80 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="28" y="0" width="24" height="20" rx="4" fill="#39A900" opacity=".8"/>
+        <path d="M20 25 Q10 60 10 100 Q10 180 40 185 Q70 180 70 100 Q70 60 60 25 Z" fill="none" stroke="#39A900" stroke-width="2.5"/>
+        <path d="M25 80 Q40 95 55 80 M25 110 Q40 125 55 110 M30 140 Q40 150 50 140" stroke="#39A900" stroke-width="1.5" opacity=".4"/>
+        <ellipse cx="40" cy="185" rx="22" ry="6" fill="#39A900" opacity=".3"/>
+      </svg>
+    </div>
+
+    <div class="cover-content">
+      <div class="cover-badge cover-pulse"><i class="fa-solid fa-leaf"></i>&nbsp; Competencia Ambiental Sostenible</div>
+      <h1 class="cover-h1">El Ciclo de Vida<br>de la <em>Botella PET</em></h1>
+      <div class="cover-program">Programa: <strong>Implementación de Infraestructura de las TIC</strong></div>
+      <div class="cover-team">
+        <div class="member">
+          <p><i class="fa-solid fa-user-gear"></i>&nbsp; Aprendiz Técnico</p>
+          <h3>Julian Esteban Pinto</h3>
+        </div>
+        <div class="member">
+          <p><i class="fa-solid fa-user-gear"></i>&nbsp; Aprendiz Técnico</p>
+          <h3>Yeison Estiben Espitia</h3>
+        </div>
+      </div>
+      <button class="start-btn" onclick="goTo(1)">Iniciar Presentación &nbsp;<i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 1 — JOURNEY MAP
+       ══════════════════════════════════════════════ -->
+  <section class="slide map-slide">
+    <div>
+      <span class="slide-tag" style="background:#a855f7"><i class="fa-solid fa-route"></i>&nbsp; Diagrama de Flujo</span>
+      <h2 class="slide-title">Product Journey Map</h2>
+      <p class="slide-sub">Pasa el cursor sobre cada fase para ver su impacto clave · Haz clic para explorar en detalle</p>
+    </div>
+    <div class="journey-map">
+      <div class="phases-row">
+        <!-- Extracción -->
+        <div class="phase-card phase-ext" onclick="goTo(3)">
+          <img class="phase-img" src="https://images.unsplash.com/photo-1504328345946-8741aee36d14?w=500&fit=crop&q=75" alt="Extracción">
+          <div class="phase-overlay"></div>
+          <div class="phase-card-inner">
+            <div class="phase-num">01</div>
+            <div class="phase-icon-wrap"><i class="fa-solid fa-oil-well"></i></div>
+            <div class="phase-label">Extracción</div>
+            <div class="phase-desc">Petróleo crudo · Fracking · Catalizadores</div>
+            <div class="phase-content">
+              <div class="phase-stat"><i class="fa-solid fa-droplet"></i> Millones de L de agua dulce en perforación</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-connector"><div class="flow-arrow"><span></span><span></span><span></span></div></div>
+        <!-- Producción -->
+        <div class="phase-card phase-prod" onclick="goTo(4)">
+          <img class="phase-img" src="https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=500&fit=crop&q=75" alt="Producción">
+          <div class="phase-overlay"></div>
+          <div class="phase-card-inner">
+            <div class="phase-num">02</div>
+            <div class="phase-icon-wrap"><i class="fa-solid fa-industry"></i></div>
+            <div class="phase-label">Producción</div>
+            <div class="phase-desc">Polimerización · Moldeo PET · Soplado</div>
+            <div class="phase-content">
+              <div class="phase-stat"><i class="fa-solid fa-fire-flame-curved"></i> 3–4 L de agua para enfriar 1 sola botella</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-connector"><div class="flow-arrow"><span></span><span></span><span></span></div></div>
+        <!-- Distribución -->
+        <div class="phase-card phase-dist" onclick="goTo(5)">
+          <img class="phase-img" src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=500&fit=crop&q=75" alt="Distribución">
+          <div class="phase-overlay"></div>
+          <div class="phase-card-inner">
+            <div class="phase-num">03</div>
+            <div class="phase-icon-wrap"><i class="fa-solid fa-truck-moving"></i></div>
+            <div class="phase-label">Distribución</div>
+            <div class="phase-desc">Barcos · Camiones diésel · Embalaje film</div>
+            <div class="phase-content">
+              <div class="phase-stat"><i class="fa-solid fa-smog"></i> CO₂ + óxidos nitrosos por combustión diésel</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-connector"><div class="flow-arrow"><span></span><span></span><span></span></div></div>
+        <!-- Consumo -->
+        <div class="phase-card phase-cons" onclick="goTo(6)">
+          <img class="phase-img" src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&fit=crop&q=75" alt="Consumo">
+          <div class="phase-overlay"></div>
+          <div class="phase-card-inner">
+            <div class="phase-num">04</div>
+            <div class="phase-icon-wrap"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div class="phase-label">Consumo</div>
+            <div class="phase-desc">1M botellas/minuto · Uso de 20 min</div>
+            <div class="phase-content">
+              <div class="phase-stat"><i class="fa-solid fa-clock"></i> 95% del consumo es completamente evitable</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-connector"><div class="flow-arrow"><span></span><span></span><span></span></div></div>
+        <!-- Desecho -->
+        <div class="phase-card phase-des" onclick="goTo(7)">
+          <img class="phase-img" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&fit=crop&q=75" alt="Desecho">
+          <div class="phase-overlay"></div>
+          <div class="phase-card-inner">
+            <div class="phase-num">05</div>
+            <div class="phase-icon-wrap"><i class="fa-solid fa-biohazard"></i></div>
+            <div class="phase-label">Desecho Final</div>
+            <div class="phase-desc">Microplásticos · Dioxinas · 1000 años</div>
+            <div class="phase-content">
+              <div class="phase-stat"><i class="fa-solid fa-skull-crossbones"></i> Solo el 15% de PET se recicla globalmente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Paradox box -->
+      <div class="paradox-box">
+        <div class="big-num" style="color:var(--prod)">1000</div>
+        <p>
+          <em>La Paradoja del Sistema:</em> Un material diseñado para durar <em>1000 años</em>
+          en el ambiente se utiliza durante <em>menos de 20 minutos</em>.
+          Un millón de botellas son compradas cada <em>60 segundos</em> en el mundo.
+        </p>
+        <div class="big-num" style="color:var(--cons)">20<span style="font-size:1.5rem">min</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 2 — VIDEO: HISTORIA DE TRES BOTELLAS
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div>
+      <span class="slide-tag" style="background:#e11d48"><i class="fa-solid fa-film"></i>&nbsp; Recurso Audiovisual</span>
+      <h2 class="slide-title">Historia de Tres Botellas</h2>
+      <p class="slide-sub">Un recorrido visual que resume el impacto real del plástico de un solo uso en nuestro planeta</p>
+    </div>
+
+    <div class="video-wrapper">
+      <video controls preload="metadata">
+        <source src="Historia de tres botellas.mp4" type="video/mp4">
+        <p style="color:var(--muted);padding:20px;text-align:center">
+          Tu navegador no soporta HTML5 video.
+          <a href="Historia de tres botellas.mp4" style="color:var(--sena-green)">Descarga el video aquí</a>.
+        </p>
+      </video>
+      <div class="video-glow"></div>
+    </div>
+
+    <div class="video-info-bar">
+      <div class="vi-icon">🎥</div>
+      <div>
+        <h4>Sobre este recurso</h4>
+        <p>Este video ilustra de forma directa el ciclo de vida del plástico PET: desde los pozos petroleros hasta los fondos marinos. Complementa cada una de las fases que explorarás en las diapositivas siguientes con imágenes reales e impacto visual.</p>
+      </div>
+    </div>
+
+    <div class="video-context-row">
+      <div class="vc-card">
+        <div class="vc-icon">👁️</div>
+        <div>
+          <strong>Antes de ver el video</strong>
+          <p>Observa cómo cada etapa del ciclo conecta con la siguiente. ¿Cuántos actores económicos se benefician mientras el daño ambiental se reparte entre todos?</p>
+        </div>
+      </div>
+      <div class="vc-card">
+        <div class="vc-icon">📝</div>
+        <div>
+          <strong>Qué observar</strong>
+          <p>Presta atención a las comunidades afectadas en cada fase: trabajadores en refinerías, poblaciones costeras, fauna marina. El impacto no es abstracto ni lejano.</p>
+        </div>
+      </div>
+      <div class="vc-card">
+        <div class="vc-icon">💭</div>
+        <div>
+          <strong>Después de verlo</strong>
+          <p>Las conclusiones al final de esta presentación recogen la reflexión iniciada aquí con datos concretos y propuestas reales que puedes aplicar desde hoy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 3 — EXTRACCIÓN
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="hero-banner">
+      <img src="https://images.unsplash.com/photo-1504328345946-8741aee36d14?w=1200&h=320&fit=crop&q=80" alt="Extracción petróleo">
+      <div class="hero-overlay" style="background:linear-gradient(to right,rgba(0,50,77,.9),rgba(245,158,11,.15))">
+        <span class="slide-tag" style="background:var(--ext)"><i class="fa-solid fa-bore-hole"></i>&nbsp; Fase 1 de 5</span>
+        <h2 class="slide-title">Extracción: El Costo Fósil</h2>
+        <p class="slide-sub">Explotación intensiva de recursos naturales no renovables</p>
+      </div>
+    </div>
+
+    <div class="stat-bar">
+      <div class="stat-pill" style="color:var(--ext)"><span class="stat-num" data-target="450">0</span><span class="stat-label">Millas de tuberías</span></div>
+      <div class="stat-pill" style="color:var(--prod)"><span class="stat-num" data-target="3">0</span><span class="stat-label">% del petróleo mundial → PET</span></div>
+      <div class="stat-pill" style="color:var(--dist)"><span class="stat-num" data-target="60">0</span><span class="stat-label">Años de vida útil de un pozo</span></div>
+      <div class="stat-pill" style="color:var(--cons)"><span class="stat-num" data-target="30">0</span><span class="stat-label">Toneladas de residuos/pozo</span></div>
+    </div>
+
+    <div class="qa-grid">
+      <div class="qa-card" style="border-color:rgba(245,158,11,.3)">
+        <div class="qa-card-stripe" style="background:var(--ext)"></div>
+        <span class="qa-card-icon">🛢️</span>
+        <div class="qa-card-q">¿Qué materiales se necesitan?</div>
+        <div class="qa-card-a">Sustancias basadas en <strong>hidrocarburos fósiles</strong>: petróleo crudo y gas natural licuado. También se emplean catalizadores de <strong>trióxido de antimonio</strong> (metal pesado) para la reacción de polimerización del PET.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(245,158,11,.3)">
+        <div class="qa-card-stripe" style="background:var(--ext)"></div>
+        <span class="qa-card-icon">🌍</span>
+        <div class="qa-card-q">¿De dónde salen los materiales?</div>
+        <div class="qa-card-a">Yacimientos continentales profundos y <strong>plataformas marítimas</strong> de perforación. Manejados por consorcios petroquímicos globales en Medio Oriente, EE. UU., Rusia y refinerías regionales.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(245,158,11,.3)">
+        <div class="qa-card-stripe" style="background:var(--ext)"></div>
+        <span class="qa-card-icon">💧</span>
+        <div class="qa-card-q">¿Qué recursos naturales se utilizan?</div>
+        <div class="qa-card-a">Reservas <strong>no renovables de petróleo</strong> de la litosfera y millones de hectolitros de <strong>agua dulce limpia</strong> para los sistemas mecánicos de perforación y lavado químico del crudo pesado.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">⚠️</span>
+        <div class="qa-card-q">¿Qué impactos ambientales produce?</div>
+        <div class="qa-card-a">Deforestación masiva, hundimiento de terrenos, fugas de <strong>gas metano</strong> y derrames petroleros. El <strong>fracking</strong> destruye acuíferos subterráneos de forma permanente, contaminando fuentes de agua de comunidades enteras.</div>
+      </div>
+      <div class="qa-card wide" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">👥</span>
+        <div class="qa-card-q">¿Se afecta alguna comunidad o ecosistema?</div>
+        <div class="qa-card-a"><strong>Impacto Social Devastador:</strong> Pérdida de soberanía alimentaria para comunidades étnicas y rurales por contaminación de tierras ancestrales. Los habitantes cercanos a pozos y refinerías presentan tasas desproporcionadas de <strong>enfermedades pulmonares obstructivas</strong>, toxicidad en sangre por benceno y alteraciones genéticas celulares. Las comunidades afectadas raramente reciben compensación.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 4 — PRODUCCIÓN
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="hero-banner">
+      <img src="https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=1200&h=320&fit=crop&q=80" alt="Producción plástico">
+      <div class="hero-overlay" style="background:linear-gradient(to right,rgba(0,50,77,.9),rgba(239,68,68,.15))">
+        <span class="slide-tag" style="background:var(--prod)"><i class="fa-solid fa-gears"></i>&nbsp; Fase 2 de 5</span>
+        <h2 class="slide-title">Producción: Alquimia Petroquímica</h2>
+        <p class="slide-sub">Transformación estructural del recurso en un polímero artificial indestructible</p>
+      </div>
+    </div>
+
+    <div class="stat-bar">
+      <div class="stat-pill" style="color:var(--prod)"><span class="stat-num" data-target="260">0</span><span class="stat-label">°C Temperatura del horno</span></div>
+      <div class="stat-pill" style="color:var(--ext)"><span class="stat-num" data-target="4">0</span><span class="stat-label">L agua por botella fabricada</span></div>
+      <div class="stat-pill" style="color:var(--dist)"><span class="stat-num" data-target="380">0</span><span class="stat-label">Fábricas PET en el mundo</span></div>
+      <div class="stat-pill" style="color:var(--des)"><span class="stat-num" data-target="75">0</span><span class="stat-label">M ton/año plástico global</span></div>
+    </div>
+
+    <div class="qa-grid">
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">⚗️</span>
+        <div class="qa-card-q">¿Cómo se fabrica el producto?</div>
+        <div class="qa-card-a">El petróleo pasa por <strong>fraccionamiento térmico</strong> para obtener etileno y paraxileno. Se polimerizan en largas cadenas dando origen a <strong>pellets de resina PET</strong>. La resina se funde, moldea en preformas y se estira con inyección de aire comprimido (moldeo por soplado).</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">🏭</span>
+        <div class="qa-card-q">¿Qué máquinas o procesos industriales se usan?</div>
+        <div class="qa-card-a">Torres de <strong>destilación petroquímica</strong> automatizadas, reactores térmicos cerrados, inyectoras hidráulicas de alta presión y maquinaria neumática de <strong>soplado-estirado lineal</strong> de alto rendimiento.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">⚡</span>
+        <div class="qa-card-q">¿Cuánta energía o agua se necesita?</div>
+        <div class="qa-card-a">Consumo masivo de electricidad (hornos a +260°C continuos). El dato crítico: se necesitan <strong>3 a 4 litros de agua dulce industrial</strong> para refrigerar y dar forma a una sola botella plástica de 1 litro. Más agua en la botella que en su contenido.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">☣️</span>
+        <div class="qa-card-q">¿Qué residuos o contaminación se generan?</div>
+        <div class="qa-card-a">Vaporización de <strong>Compuestos Orgánicos Volátiles (COVs)</strong>, lodos pesados con químicos sintéticos peligrosos y millones de micro-pellets plásticos perdidos accidentalmente que colapsan drenajes de agua limpia.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(239,68,68,.3)">
+        <div class="qa-card-stripe" style="background:var(--prod)"></div>
+        <span class="qa-card-icon">👷</span>
+        <div class="qa-card-q">¿Quiénes trabajan en su fabricación?</div>
+        <div class="qa-card-a">Operarios industriales, ingenieros químicos y personal técnico. En fábricas desreguladas, suele contratarse personal <strong>vulnerable expuesto a carcinógenos</strong> sin protección adecuada ni monitoreo de salud laboral.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 5 — DISTRIBUCIÓN
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="hero-banner">
+      <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1200&h=320&fit=crop&q=80" alt="Distribución transporte">
+      <div class="hero-overlay" style="background:linear-gradient(to right,rgba(0,50,77,.9),rgba(6,182,212,.15))">
+        <span class="slide-tag" style="background:var(--dist)"><i class="fa-solid fa-truck-moving"></i>&nbsp; Fase 3 de 5</span>
+        <h2 class="slide-title">Distribución: Externalización de Costos</h2>
+        <p class="slide-sub">Traslado global a gran escala para asegurar la rotación inmediata de las mercancías</p>
+      </div>
+    </div>
+
+    <div class="stat-bar">
+      <div class="stat-pill" style="color:var(--dist)"><span class="stat-num" data-target="90">0</span><span class="stat-label">% transporte terrestre diésel</span></div>
+      <div class="stat-pill" style="color:var(--prod)"><span class="stat-num" data-target="2.5">0</span><span class="stat-label">Kg CO₂ por km de camión</span></div>
+      <div class="stat-pill" style="color:var(--ext)"><span class="stat-num" data-target="12">0</span><span class="stat-label">Países en cadena de suministro</span></div>
+      <div class="stat-pill" style="color:var(--cons)"><span class="stat-num" data-target="40">0</span><span class="stat-label">% de sobreenvasado plástico</span></div>
+    </div>
+
+    <div class="qa-grid">
+      <div class="qa-card" style="border-color:rgba(6,182,212,.3)">
+        <div class="qa-card-stripe" style="background:var(--dist)"></div>
+        <span class="qa-card-icon">🚢</span>
+        <div class="qa-card-q">¿Cómo llega el producto al consumidor?</div>
+        <div class="qa-card-a">Las preformas vacías se trasladan a plantas embotelladoras multinacionales, se llenan con agua o bebidas y pasan por redes <strong>mayoristas logísticas</strong> hasta estantes comerciales.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(6,182,212,.3)">
+        <div class="qa-card-stripe" style="background:var(--dist)"></div>
+        <span class="qa-card-icon">🌐</span>
+        <div class="qa-card-q">¿Se transporta en barco, avión o camión?</div>
+        <div class="qa-card-a">La resina base viaja en <strong>barcos de carga pesada intercontinentales</strong>. El producto terminado se distribuye casi en su totalidad por tierra mediante <strong>tractocamiones diésel</strong> y flotas de reparto urbano.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(6,182,212,.3)">
+        <div class="qa-card-stripe" style="background:var(--dist)"></div>
+        <span class="qa-card-icon">📍</span>
+        <div class="qa-card-q">¿Desde qué países o ciudades viene?</div>
+        <div class="qa-card-a">Las resinas plásticas provienen de <strong>China, EE. UU. y la Unión Europea</strong>. El embotellado final ocurre en instalaciones industriales regionales cercanas a las grandes ciudades de consumo.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(6,182,212,.3)">
+        <div class="qa-card-stripe" style="background:var(--dist)"></div>
+        <span class="qa-card-icon">💨</span>
+        <div class="qa-card-q">¿Qué contaminación produce el transporte?</div>
+        <div class="qa-card-a">Masivas inyecciones de <strong>CO₂ y óxidos nitrosos</strong> por quema de combustibles pesados, intensificando el efecto invernadero. Emisiones de <strong>material particulado PM2.5</strong> que dañan pulmones en entornos urbanos.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(6,182,212,.3)">
+        <div class="qa-card-stripe" style="background:var(--dist)"></div>
+        <span class="qa-card-icon">📦</span>
+        <div class="qa-card-q">¿Cómo se empaca o almacena?</div>
+        <div class="qa-card-a">Botellas agrupadas con <strong>películas plásticas de polietileno termoencogible</strong> de un solo uso. Estibadas en tarimas de madera aseguradas con metros de <strong>plástico film estirable</strong> para bodegajes automatizados.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — CONSUMO
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="hero-banner">
+      <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=320&fit=crop&q=80" alt="Consumo supermercado">
+      <div class="hero-overlay" style="background:linear-gradient(to right,rgba(0,50,77,.9),rgba(132,204,22,.15))">
+        <span class="slide-tag" style="background:var(--cons);color:#000"><i class="fa-solid fa-people-carry-box"></i>&nbsp; Fase 4 de 5</span>
+        <h2 class="slide-title">Consumo: La Trampa del Desechable</h2>
+        <p class="slide-sub">El diseño de la obsolescencia percibida y la imposición de falsas necesidades</p>
+      </div>
+    </div>
+
+    <div class="stat-bar">
+      <div class="stat-pill" style="color:var(--cons)"><span class="stat-num" data-target="1">0</span><span class="stat-label">Millón de botellas/minuto</span></div>
+      <div class="stat-pill" style="color:var(--prod)"><span class="stat-num" data-target="20">0</span><span class="stat-label">Minutos de uso promedio</span></div>
+      <div class="stat-pill" style="color:var(--ext)"><span class="stat-num" data-target="95">0</span><span class="stat-label">% de consumo evitable</span></div>
+      <div class="stat-pill" style="color:var(--dist)"><span class="stat-num" data-target="500">0</span><span class="stat-label">Millardos botellas/año</span></div>
+    </div>
+
+    <div class="qa-grid">
+      <div class="qa-card" style="border-color:rgba(132,204,22,.3)">
+        <div class="qa-card-stripe" style="background:var(--cons)"></div>
+        <span class="qa-card-icon">👨‍👩‍👧‍👦</span>
+        <div class="qa-card-q">¿Quién consume el producto?</div>
+        <div class="qa-card-a">La totalidad de los ciudadanos a escala global: en <strong>escuelas, puestos de trabajo, eventos comerciales</strong> y entornos familiares. No discrimina nivel socioeconómico ni región geográfica.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(132,204,22,.3)">
+        <div class="qa-card-stripe" style="background:var(--cons)"></div>
+        <span class="qa-card-icon">⏱️</span>
+        <div class="qa-card-q">¿Con qué frecuencia se usa?</div>
+        <div class="qa-card-a">Consumo desmesurado: <strong>un millón de botellas cada 60 segundos</strong> en el mundo. El uso real promedio es de menos de 20 minutos para vaciar el líquido, tras lo cual se descarta inmediatamente.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(132,204,22,.3)">
+        <div class="qa-card-stripe" style="background:var(--cons)"></div>
+        <span class="qa-card-icon">❓</span>
+        <div class="qa-card-q">¿Es realmente necesario?</div>
+        <div class="qa-card-a"><strong>En más del 95% de los escenarios: NO.</strong> Es un hábito impuesto. En ciudades con acueductos tratados, es reemplazable por agua filtrada casera. Solo se justifica en emergencias por desastres naturales o contaminación súbita de redes.</div>
+      </div>
+      <div class="qa-card" style="border-color:rgba(132,204,22,.3)">
+        <div class="qa-card-stripe" style="background:var(--cons)"></div>
+        <span class="qa-card-icon">✅</span>
+        <div class="qa-card-q">¿Qué beneficios ofrece?</div>
+        <div class="qa-card-a">Bajo costo unitario <em>aparente</em>, ligereza excepcional, alta resistencia estructural (no se rompe como el vidrio) y facilidad de transporte. Estos beneficios son reales pero no justifican sus costos ambientales.</div>
+      </div>
+      <div class="qa-card wide" style="border-color:rgba(132,204,22,.3)">
+        <div class="qa-card-stripe" style="background:var(--cons)"></div>
+        <span class="qa-card-icon">🧠</span>
+        <div class="qa-card-q">¿Genera dependencia o consumo excesivo?</div>
+        <div class="qa-card-a"><strong>Manipulación y Obsolescencia Percibida:</strong> El marketing corporativo asocia falsamente el agua de grifo con suciedad y el plástico con pureza o estatus. El envase está diseñado estéticamente para verse "viejo" tras el primer uso, <strong>presionando psicológicamente</strong> al ciudadano a desecharlo y comprar uno nuevo idéntico. Es un ciclo de consumo impuesto sin justificación ambiental.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — DESECHO
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div class="hero-banner">
+      <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=320&fit=crop&q=80" alt="Contaminación plástico">
+      <div class="hero-overlay" style="background:linear-gradient(to right,rgba(0,50,77,.9),rgba(16,185,129,.15))">
+        <span class="slide-tag" style="background:var(--des)"><i class="fa-solid fa-biohazard"></i>&nbsp; Fase 5 de 5</span>
+        <h2 class="slide-title">Desecho: Inmortalidad Contaminante</h2>
+        <p class="slide-sub">El colapso ambiental del flujo lineal e insostenible de los materiales plásticos</p>
+      </div>
+    </div>
+
+    <div class="stat-bar">
+      <div class="stat-pill" style="color:var(--des)"><span class="stat-num" data-target="1000">0</span><span class="stat-label">Años para degradarse</span></div>
+      <div class="stat-pill" style="color:var(--prod)"><span class="stat-num" data-target="15">0</span><span class="stat-label">% reciclaje real global</span></div>
+      <div class="stat-pill" style="color:var(--ext)"><span class="stat-num" data-target="8">0</span><span class="stat-label">M ton de plástico al océano/año</span></div>
+      <div class="stat-pill" style="color:var(--dist)"><span class="stat-num" data-target="5">0</span><span class="stat-label">Microplásticos en cada L de agua</span></div>
+    </div>
+
+    <!-- Layout con gráfico SVG + tarjetas -->
+    <div class="desecho-layout">
+      <div class="qa-grid" style="grid-template-columns:1fr 1fr">
+        <div class="qa-card" style="border-color:rgba(16,185,129,.3)">
+          <div class="qa-card-stripe" style="background:var(--des)"></div>
+          <span class="qa-card-icon">🗑️</span>
+          <div class="qa-card-q">¿Qué ocurre cuando ya no sirve?</div>
+          <div class="qa-card-a">Se descarta en basura común e inicia un viaje destructivo hacia <strong>rellenos sanitarios desbordados</strong>, botaderos a cielo abierto, sumideros urbanos y corrientes hídricas naturales que desembocan en el océano.</div>
+        </div>
+        <div class="qa-card" style="border-color:rgba(16,185,129,.3)">
+          <div class="qa-card-stripe" style="background:var(--des)"></div>
+          <span class="qa-card-icon">♻️</span>
+          <div class="qa-card-q">¿Se recicla, reutiliza o se bota?</div>
+          <div class="qa-card-a">Aunque el PET es técnicamente reciclable, las tasas de reciclaje reales son <strong>inferiores al 15%</strong> globalmente. Reutilizar botellas delgadas en casa libera <strong>químicos nocivos (BPA)</strong> y genera colonias bacterianas.</div>
+        </div>
+        <div class="qa-card" style="border-color:rgba(16,185,129,.3)">
+          <div class="qa-card-stripe" style="background:var(--des)"></div>
+          <span class="qa-card-icon">⏳</span>
+          <div class="qa-card-q">¿Cuánto tarda en descomponerse?</div>
+          <div class="qa-card-a">Entre <strong>450 y 1000 años</strong> en fragmentarse. El PET nunca se biodegrada orgánicamente. Solo se <strong>fotodegrada</strong> con luz solar en partículas invisibles de microplástico.</div>
+        </div>
+        <div class="qa-card" style="border-color:rgba(16,185,129,.3)">
+          <div class="qa-card-stripe" style="background:var(--des)"></div>
+          <span class="qa-card-icon">🦈</span>
+          <div class="qa-card-q">¿Qué daños ambientales puede causar?</div>
+          <div class="qa-card-a">Los fragmentos se vuelven <strong>microplásticos</strong> que absorben pesticidas en los océanos, ingresan al estómago de fauna marina y <strong>regresan al ser humano</strong> por la cadena alimenticia. La quema informal libera <strong>dioxinas</strong>.</div>
+        </div>
+        <div class="qa-card" style="border-color:rgba(16,185,129,.3);grid-column:span 2">
+          <div class="qa-card-stripe" style="background:var(--des)"></div>
+          <span class="qa-card-icon">🌱</span>
+          <div class="qa-card-q">¿Existen alternativas más sostenibles?</div>
+          <div class="qa-card-a"><strong>Alternativas urgentes y reales:</strong> Termos de <strong>acero inoxidable o vidrio</strong> de uso permanente, filtros fijos de grifo comunitarios (costo mínimo, impacto máximo) y retorno estricto a <strong>envases de vidrio retornable</strong>. La reducción en origen siempre supera al reciclaje.</div>
+        </div>
+      </div>
+
+      <!-- SVG Donut Chart — destino del plástico -->
+      <div class="donut-wrap">
+        <h4>Destino del plástico PET</h4>
+        <svg class="donut-svg" viewBox="0 0 180 180" id="donut-svg">
+          <!-- Donut segments painted by JS -->
+        </svg>
+        <div class="donut-legend">
+          <div class="dl-row"><div class="dl-dot" style="background:#7D8590"></div>Vertedero / Botadero <span>55%</span></div>
+          <div class="dl-row"><div class="dl-dot" style="background:#06B6D4"></div>Océano / Ríos <span>22%</span></div>
+          <div class="dl-row"><div class="dl-dot" style="background:#10B981"></div>Reciclado real <span>15%</span></div>
+          <div class="dl-row"><div class="dl-dot" style="background:#EF4444"></div>Incinerado / Quemado <span>8%</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 8 — CONCLUSIONES: IMPACTOS
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div>
+      <span class="slide-tag" style="background:var(--prod)"><i class="fa-solid fa-comment-dots"></i>&nbsp; Reflexión Personal</span>
+      <h2 class="slide-title">Conclusiones: Impactos</h2>
+      <p class="slide-sub">Perspectiva personal sobre los impactos ambientales y sociales del ciclo de vida del PET</p>
+    </div>
+
+    <!-- Cita de reflexión -->
+    <div class="reflection-intro">
+      <div class="q-mark">"</div>
+      <p>Después de analizar cada etapa del ciclo de vida de la botella PET, es imposible no llegar a conclusiones incómodas: el sistema está diseñado para generar ganancias a corto plazo trasladando costos devastadores al medio ambiente y a las comunidades más vulnerables. No es un accidente; es la lógica del modelo económico lineal.</p>
+    </div>
+
+    <!-- Estadísticas de impacto -->
+    <div class="impact-stats-row">
+      <div class="ist c1"><span class="stat-num ist-num" style="color:var(--prod)" data-target="1000">0</span><span class="ist-label">años para fragmentarse</span></div>
+      <div class="ist c2"><span class="stat-num ist-num" style="color:var(--ext)" data-target="20">0</span><span class="ist-label">minutos de vida útil</span></div>
+      <div class="ist c3"><span class="stat-num ist-num" style="color:var(--dist)" data-target="85">0</span><span class="ist-label">% NO se recicla jamás</span></div>
+      <div class="ist c4"><span class="stat-num ist-num" style="color:var(--des)" data-target="95">0</span><span class="ist-label">% consumo evitable</span></div>
+    </div>
+
+    <!-- Dos columnas: ambiental vs social -->
+    <div class="impact-columns">
+      <div class="impact-col environmental">
+        <div class="impact-col-header">
+          <i class="fa-solid fa-earth-americas"></i>
+          <h3>Impacto Ambiental</h3>
+        </div>
+        <div class="impact-items">
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--prod)"></div>
+            <p>Un material que <strong>tarda hasta 1000 años</strong> en fragmentarse se usa durante menos de 20 minutos. Esta contradicción fundamental revela el fracaso del modelo económico lineal que extrae, produce, usa y descarta.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--prod)"></div>
+            <p>Los <strong>microplásticos ya están en todos lados</strong>: en el océano, en el aire, en el agua potable y en la sangre humana. La contaminación plástica no respeta fronteras geográficas ni estatus socioeconómico.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--prod)"></div>
+            <p>El reciclaje real es un <strong>mito estadístico</strong>: menos del 15% del plástico producido se recicla efectivamente. El sistema no fue diseñado para recuperar; fue diseñado para producir y desechar indefinidamente.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--prod)"></div>
+            <p>Cada fase del ciclo —extracción, producción, transporte, descarte— <strong>contamina activamente</strong>. No existe una etapa "limpia" ni neutral en la vida de una botella PET desde su origen hasta su destino final.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="impact-col social">
+        <div class="impact-col-header">
+          <i class="fa-solid fa-people-group"></i>
+          <h3>Impacto Social</h3>
+        </div>
+        <div class="impact-items">
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--dist)"></div>
+            <p>Las <strong>comunidades vulnerables pagan el costo</strong> que las corporaciones externalizan: enfermedades respiratorias, intoxicaciones por benceno y tierras inutilizadas cerca de refinerías, fábricas y botaderos.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--dist)"></div>
+            <p>El marketing corporativo logró algo extraordinario: <strong>convencer a millones de personas</strong> de que el agua de grifo es peligrosa, creando una necesidad artificial que beneficia a pocas empresas multinacionales.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--dist)"></div>
+            <p>Los trabajadores de fábricas desreguladas en países en desarrollo son <strong>expuestos a carcinógenos</strong> sin protección adecuada, con salarios que no compensan en absoluto el daño a su salud a largo plazo.</p>
+          </div>
+          <div class="impact-item">
+            <div class="impact-bullet" style="background:var(--dist)"></div>
+            <p>La <strong>inequidad ambiental es estructural</strong>: quien más contamina raramente es quien más sufre. Los países consumidores exportan su basura plástica a naciones con menos poder de negociación internacional.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 9 — PROPUESTAS PARA REDUCIR EL IMPACTO
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div>
+      <span class="slide-tag" style="background:var(--sena-green)"><i class="fa-solid fa-lightbulb"></i>&nbsp; Acción y Cambio</span>
+      <h2 class="slide-title">Propuestas para Reducir el Impacto</h2>
+      <p class="slide-sub">Medidas concretas desde lo individual, lo comunitario y lo legislativo para revertir el daño</p>
+    </div>
+
+    <div class="proposals-grid">
+      <!-- Acción Individual -->
+      <div class="proposal-cat">
+        <div class="pcat-header" style="border-color:var(--sena-green)">
+          <i class="fa-solid fa-person" style="color:var(--sena-green)"></i>
+          <h3 style="color:var(--sena-green)">Acción Individual</h3>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(239,68,68,.4)">
+          <span class="priority-badge pb-urgent">Urgente</span>
+          <p><strong>Eliminar botellas de un solo uso.</strong> Sustituir por termos de acero inoxidable o botella de vidrio reutilizable. Un termo de acero amortiza su huella de carbono en tan solo 7 usos.</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(245,158,11,.4)">
+          <span class="priority-badge pb-medium">Importante</span>
+          <p><strong>Instalar filtros de grifo domésticos.</strong> El agua de acueducto tratada con filtro es 200 veces más barata y sostenible que el agua embotellada. Rompe el mito de la "suciedad del grifo".</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(57,169,0,.4)">
+          <span class="priority-badge pb-long">Hábito</span>
+          <p><strong>Separación en origen en el hogar.</strong> Clasificar PET, vidrio, orgánicos y papel garantiza que el material llegue efectivamente a ser reciclado en lugar de mezclarse en basura común.</p>
+        </div>
+      </div>
+
+      <!-- Acción Comunitaria -->
+      <div class="proposal-cat">
+        <div class="pcat-header" style="border-color:var(--ext)">
+          <i class="fa-solid fa-city" style="color:var(--ext)"></i>
+          <h3 style="color:var(--ext)">Acción Comunitaria</h3>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(239,68,68,.4)">
+          <span class="priority-badge pb-urgent">Urgente</span>
+          <p><strong>Estaciones de hidratación pública.</strong> Fuentes de agua potable filtrada en parques, colegios y transporte público eliminan la necesidad del envase desechable en entornos urbanos.</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(245,158,11,.4)">
+          <span class="priority-badge pb-medium">Importante</span>
+          <p><strong>Programas de trazabilidad digital del reciclaje.</strong> Contenedores diferenciados con código QR que confirma al ciudadano que su residuo llegó a ser procesado. Genera confianza y adhesión.</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(57,169,0,.4)">
+          <span class="priority-badge pb-long">Largo plazo</span>
+          <p><strong>Campañas de educación ambiental real.</strong> Desmontar el mito corporativo de que el plástico es sinónimo de higiene. Información clara y verificable en escuelas y medios de comunicación.</p>
+        </div>
+      </div>
+
+      <!-- Acción Legislativa -->
+      <div class="proposal-cat">
+        <div class="pcat-header" style="border-color:var(--cons)">
+          <i class="fa-solid fa-scale-balanced" style="color:var(--cons)"></i>
+          <h3 style="color:var(--cons)">Acción Legislativa</h3>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(239,68,68,.4)">
+          <span class="priority-badge pb-urgent">Urgente</span>
+          <p><strong>Prohibir PET de un solo uso</strong> en comercios y eventos masivos. Varios países ya lo implementaron con éxito. La industria se adapta cuando la regulación es firme e irrevocable.</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(245,158,11,.4)">
+          <span class="priority-badge pb-medium">Importante</span>
+          <p><strong>Economía circular con responsabilidad del productor.</strong> Obligar a las empresas a financiar y gestionar el ciclo completo de sus envases, internalizando los costos ambientales actuales.</p>
+        </div>
+        <div class="proposal-item" style="border-color:rgba(57,169,0,.4)">
+          <span class="priority-badge pb-long">Largo plazo</span>
+          <p><strong>Retorno al envase de vidrio retornable.</strong> Incentivos fiscales para sectores que adopten sistemas de devolución y reutilización de envases, reduciendo la producción desde el origen.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="closing-thought">
+      <i class="fa-solid fa-seedling" style="color:var(--sena-green)"></i>
+      <p><strong>La reducción en origen siempre supera al reciclaje.</strong> La solución más eficaz no es reciclar mejor el plástico que ya existe, sino producir radicalmente menos plástico nuevo desde el principio. El cambio de sistema es urgente e impostergable.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 10 — SOLUCIONES TIC
+       ══════════════════════════════════════════════ -->
+  <section class="slide">
+    <div>
+      <span class="slide-tag" style="background:var(--dist)"><i class="fa-solid fa-microchip"></i>&nbsp; Tecnología Aplicada</span>
+      <h2 class="slide-title">Soluciones TIC</h2>
+      <p class="slide-sub">Propuestas tecnológicas desde la infraestructura TIC — Julian Pinto &amp; Yeison Espitia</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Eje de Impacto</th>
+            <th>Conclusiones del Ciclo</th>
+            <th>Propuestas de Consumo Responsable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><i class="fa-solid fa-earth-americas" style="color:var(--prod)"></i>&nbsp; Ambiental</td>
+            <td>El modelo lineal agota un planeta con límites físicos. Se gasta más agua en enfriar el envase que el líquido útil que contiene. La incineración libera toxinas globales de dioxinas irreversibles.</td>
+            <td>Leyes de prohibición de botellas plásticas de un solo uso en comercios. Economía circular real con separación estricta en origen y trazabilidad digital del reciclaje.</td>
+          </tr>
+          <tr>
+            <td><i class="fa-solid fa-handshake-angle" style="color:var(--dist)"></i>&nbsp; Social / Humano</td>
+            <td>Externalización de costos: las corporaciones ganan mientras poblaciones vulnerables enferman por benceno y dioxinas de refinerías cercanas a sus comunidades.</td>
+            <td>Instalación masiva de estaciones de hidratación pública con agua potable filtrada en parques, colegios y transporte para eliminar la necesidad del envase.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tic-box">
+      <h4><i class="fa-solid fa-microchip" style="color:var(--dist)"></i>&nbsp; Propuestas TIC — Julian Pinto &amp; Yeison Espitia</h4>
+      <div class="tic-item">
+        <div class="tic-badge">🌐</div>
+        <div class="tic-text">
+          <strong>1. Internet de las Cosas (IoT)</strong>
+          <span>Sensores ultrasónicos en contenedores de reciclaje comunales para automatizar y optimizar rutas de recolección, reduciendo emisiones de diésel mediante análisis de datos en tiempo real.</span>
+        </div>
+      </div>
+      <div class="tic-item">
+        <div class="tic-badge">📡</div>
+        <div class="tic-text">
+          <strong>2. Redes de Monitoreo Ambiental</strong>
+          <span>Despliegue de nodos con sensores IoT conectados a redes inalámbricas para auditar en tiempo real la calidad del aire y detectar emisiones ilegales de dioxinas por quema de plásticos.</span>
+        </div>
+      </div>
+      <div class="tic-item">
+        <div class="tic-badge">💻</div>
+        <div class="tic-text">
+          <strong>3. Plataformas TIC de Concienciación</strong>
+          <span>Servidores y aplicaciones web ligeras que muestran dinámicamente los puntos de recarga de agua limpia más cercanos, desincentivando el consumo de botellas PET con datos georreferenciados.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /slides-wrap -->
+
+  <footer class="controls">
+    <button class="ctrl-btn" id="prevBtn" onclick="prev()" disabled><i class="fa-solid fa-chevron-left"></i>&nbsp; Anterior</button>
+    <div class="slide-indicator" id="indicator">01 / 11</div>
+    <button class="ctrl-btn" id="nextBtn" onclick="next()">Siguiente &nbsp;<i class="fa-solid fa-chevron-right"></i></button>
+  </footer>
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- =============================================================
+     JAVASCRIPT — Navegación + Animaciones + Canvas + SVG Donut
+     ============================================================= -->
+<script>
+/* ── Core Navigation ── */
+const slides    = document.querySelectorAll('.slide');
+const navLinks  = document.querySelectorAll('.step-link');
+const bar       = document.getElementById('bar');
+const indicator = document.getElementById('indicator');
+const prevBtn   = document.getElementById('prevBtn');
+const nextBtn   = document.getElementById('nextBtn');
+const total     = slides.length;
+let cur = 0;
+
+function pad(n){ return String(n).padStart(2,'0') }
+
+/* ── Animated Number Counters ── */
+function animateStats(slideEl){
+  slideEl.querySelectorAll('[data-target]').forEach(el => {
+    const target  = parseFloat(el.dataset.target);
+    const isFloat = String(target).includes('.');
+    const dur = 1200, step = 16, steps = dur / step;
+    let frame = 0;
+    const ticker = setInterval(() => {
+      frame++;
+      const prog = frame / steps;
+      const ease = 1 - Math.pow(1 - prog, 3);
+      const val  = target * ease;
+      el.textContent = isFloat ? val.toFixed(1) : Math.round(val);
+      if(frame >= steps){
+        el.textContent = isFloat ? target.toFixed(1) : target;
+        clearInterval(ticker);
+      }
+    }, step);
+  });
+}
+
+/* ── Update UI ── */
+function updateUI(){
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === cur);
+    if(i === cur) s.scrollTop = 0;
+  });
+  navLinks.forEach((l, i) => l.classList.toggle('active', i === cur));
+  const pct = (cur / (total - 1)) * 100;
+  bar.style.width = pct + '%';
+  indicator.textContent = pad(cur + 1) + ' / ' + pad(total);
+  prevBtn.disabled = cur === 0;
+  nextBtn.disabled = cur === total - 1;
+  animateStats(slides[cur]);
+  // Draw donut on slide 7 (desecho)
+  if(cur === 7) drawDonut();
+}
+
+function goTo(i){ if(i >= 0 && i < total){ cur = i; updateUI(); } }
+function next(){ if(cur < total - 1){ cur++; updateUI(); } }
+function prev(){ if(cur > 0){ cur--; updateUI(); } }
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === 'PageDown') next();
+  if(e.key === 'ArrowLeft'  || e.key === 'PageUp')   prev();
+});
+
+/* ══════════════════════════════════════════════════════
+   CANVAS API — Particle Animation (Cover Slide)
+   ══════════════════════════════════════════════════════ */
+(function initParticles(){
+  const canvas  = document.getElementById('cover-canvas');
+  const section = canvas.closest('.slide');
+  const ctx     = canvas.getContext('2d');
+
+  function resize(){
+    canvas.width  = section.offsetWidth;
+    canvas.height = section.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const PARTICLE_COUNT = 60;
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x:    Math.random() * canvas.width,
+    y:    Math.random() * canvas.height,
+    r:    Math.random() * 1.8 + 0.4,
+    vx:   (Math.random() - 0.5) * 0.4,
+    vy:   (Math.random() - 0.5) * 0.4,
+    alpha: Math.random() * 0.4 + 0.1,
+    color: Math.random() > 0.5 ? '57,169,0' : '255,107,43'
+  }));
+
+  function drawParticles(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      // Draw particle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+      ctx.fill();
+      // Connect nearby particles
+      particles.forEach(q => {
+        const dx   = p.x - q.x;
+        const dy   = p.y - q.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if(dist < 100){
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(${p.color},${(1 - dist / 100) * 0.06})`;
+          ctx.lineWidth   = 0.5;
+          ctx.stroke();
+        }
+      });
+      // Move
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+      if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    });
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+})();
+
+/* ══════════════════════════════════════════════════════
+   SVG — Donut Chart (Desecho Slide)
+   ══════════════════════════════════════════════════════ */
+function drawDonut(){
+  const svg    = document.getElementById('donut-svg');
+  if(!svg || svg.dataset.drawn) return;
+  svg.dataset.drawn = '1';
+
+  const cx = 90, cy = 90, r = 72, strokeW = 26;
+  const circumference = 2 * Math.PI * r;
+
+  const segments = [
+    { pct: 55, color: '#7D8590', label: 'Vertedero' },
+    { pct: 22, color: '#06B6D4', label: 'Océano'    },
+    { pct: 15, color: '#10B981', label: 'Reciclado' },
+    { pct:  8, color: '#EF4444', label: 'Quemado'   }
+  ];
+
+  let offset = 0;
+  // background circle
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r);
+  bg.setAttribute('fill','none'); bg.setAttribute('stroke','#21262D');
+  bg.setAttribute('stroke-width', strokeW);
+  svg.appendChild(bg);
+
+  segments.forEach((seg, i) => {
+    const dashLen   = (seg.pct / 100) * circumference;
+    const dashGap   = circumference - dashLen;
+    const circle    = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+    circle.setAttribute('fill','none');
+    circle.setAttribute('stroke', seg.color);
+    circle.setAttribute('stroke-width', strokeW);
+    circle.setAttribute('stroke-dasharray', `${dashLen} ${dashGap}`);
+    circle.setAttribute('stroke-dashoffset', -(offset / 100) * circumference + circumference / 4);
+    circle.setAttribute('stroke-linecap','butt');
+    // Animate
+    circle.style.transition = `stroke-dashoffset 0.6s ease ${i * 0.15}s, opacity 0.4s ease ${i * 0.15}s`;
+    circle.style.opacity = '0';
+    svg.appendChild(circle);
+    setTimeout(() => { circle.style.opacity = '1'; }, 50);
+    offset += seg.pct;
+  });
+
+  // Center text
+  const text1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  text1.setAttribute('x', cx); text1.setAttribute('y', cy - 8);
+  text1.setAttribute('text-anchor','middle'); text1.setAttribute('fill','#EF4444');
+  text1.setAttribute('font-size','28'); text1.setAttribute('font-family',"'Bebas Neue',cursive");
+  text1.textContent = '85%';
+  svg.appendChild(text1);
+
+  const text2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  text2.setAttribute('x', cx); text2.setAttribute('y', cy + 10);
+  text2.setAttribute('text-anchor','middle'); text2.setAttribute('fill','#7D8590');
+  text2.setAttribute('font-size','9'); text2.setAttribute('font-family',"'DM Sans',sans-serif");
+  text2.setAttribute('font-weight','600');
+  text2.textContent = 'NO RECICLADO';
+  svg.appendChild(text2);
+}
+
+/* ── Initial render ── */
+updateUI();
+</script>
+</body>
+</html>
